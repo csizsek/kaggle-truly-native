@@ -3,9 +3,9 @@ import graphlab as gl
 from graphlab.toolkits.feature_engineering import TFIDF
 
 # put in the path to the kaggle data
-PATH_TO_JSON = "path/to/data/from/process_html.py"
-PATH_TO_TRAIN_LABELS = "path/to/data/train.csv"
-PATH_TO_TEST_LABELS = "path/to/data/sampleSubmission.csv"
+PATH_TO_JSON = "tmp/chunk0.json"
+PATH_TO_TRAIN_LABELS = "data/train.csv"
+PATH_TO_TEST_LABELS = "data/sampleSubmission.csv"
 
 # a simple method to create some basic features on an SFrame
 def create_count_features(sf):
@@ -26,7 +26,7 @@ def clean_text(sf):
 def process_dataframe(sf):
     sf = clean_text(sf)
     sf = create_count_features(sf)
-    return sf 
+    return sf
 
 # read json blocks from path PATH_TO_JSON
 sf = gl.SFrame.read_csv(PATH_TO_JSON, header=False)
@@ -75,7 +75,6 @@ ypred = model.predict(test)
 
 # create submission.csv
 submission = gl.SFrame()
-submission['sponsored'] = ypred 
+submission['sponsored'] = ypred
 submission['file'] = test['id'].apply(lambda x: x + '_raw_html.txt')
 submission.save('submission_version_1.csv', format='csv')
-
