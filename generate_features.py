@@ -45,8 +45,13 @@ def extract_features(input_dir, file_name):
     texts = parse_text(soup)
     title = parse_title(soup)
     links = parse_links(soup)
-    images = parse_links(soup)
-    return [file_name, 0.1]
+    images = parse_images(soup)
+    return [
+        file_name,
+        len(images),
+        len(links),
+        len(texts)
+    ]
 
 if __name__ == '__main__':
     input_dir_name = sys.argv[1]
