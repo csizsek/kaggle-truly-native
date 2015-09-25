@@ -20,7 +20,7 @@ def parse_text(soup):
     try:
         for text in soup.find_all('p'):
             try:
-                texts.append(clean_text(text.text.encode('ascii','ignore')))
+                texts.append(text.text.encode('ascii','ignore'))
             except Exception as e:
                 #print 'failed to parse paragraph: {0}'.format(e)
                 pass
@@ -62,42 +62,52 @@ def extract_features(input_dir, file_name):
     with open(input_dir + os.sep + file_name, 'r') as file:
         soup = bs(file, 'html.parser')
 
+    values = {}
+
     title = parse_title(soup)
     n_title_chars = len(title)
     n_title_words = len(title.split(' '))
 
     links = parse_links(soup)
-    n_links = len(links)
+    values['n_links'] = len(links)
 
     images = parse_images(soup)
-    n_images = len(links)
+    values['n_images'] = len(links)
 
-    texts = ''.join(parse_text(soup))
+    texts = parse_text(soup)
     n_paragraphs = len(texts)
     text = ' '.join(texts)
     n_chars = len(text)
-    n_words = len(text.split(' '))
+    n_words = len(re.split('\s+', text))
 
-    links_per_words = 0
-    if n_words > 10:
-        links_per_words = 1.0 * n_links / n_words
+    values['n_lines'] = text.count('\n')
+    values['n_spaces'] = text.count(' ')
+    values['n_tabs'] = text.count('\t')
+    values['n_braces'] = text.count('{')
+    values['n_brackets'] = text.count('[')
+    values['n_dashes'] = text.count('-')
+    values['n_dots'] = text.count('.')
+    values['n_bangs'] = text.count('!')
+    values['n_eqs'] = text.count('=')
+    values['n_pluses'] = text.count('+')
 
-    images_per_words = 0
-    if n_words > 10:
-        images_per_words = 1.0 * n_images / n_words
-
-    return [
+    ret =  [
         file_name,
         n_title_chars,
         n_title_words,
-        n_links,
-        n_images,
         n_paragraphs,
         n_chars,
-        n_words,
-        links_per_words,
-        images_per_words
+        n_words
     ]
+
+    for feature in values.keys():
+        ret.append(values[feature])
+        feature_per_words = 0
+        if n_words > 10:
+            feature_per_words = 1.0 * values[feature] / n_words
+            ret.append(feature_per_words)
+
+    return ret
 
 if __name__ == '__main__':
     input_dir_name = sys.argv[1]
