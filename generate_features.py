@@ -124,7 +124,7 @@ if __name__ == '__main__':
         row = ','.join([str(f) for f in extract_features(input_dir_name, file_name)])
         rows.append(row)
         date = datetime.datetime.now()
-        if i % 10 == 0:
+        if i % 100 == 0:
             with open(output_file_name, 'a') as output_file:
                 for row in rows:
                     output_file.write(row + '\n')
