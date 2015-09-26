@@ -4,15 +4,25 @@ import re
 import sys
 from bs4 import BeautifulSoup as bs
 
+exception_action = 'PRINT'
+
+def handle_exception(e):
+    if exception_action == 'NOTHING':
+        return
+    elif exception_action == 'PRINT':
+        print(e)
+    elif exception_action == 'RAISE':
+        raise e
+
 def clean_text(s):
     try:
-        s = re.sub(r'[\n\t,.:;()\-\/_]+', ' ', s)
+        s = re.sub(r'[^A-Za-z]+', ' ', s)
         s = re.sub(r'\s{2,}', ' ', s)
         s = s.strip()
         s = s.lower()
         return s
     except Exception as e:
-        #print 'failed to clean up text: {0}'.format(e)
+        handle_exception(e)
         return ''
 
 def parse_text(soup):
@@ -22,40 +32,41 @@ def parse_text(soup):
             try:
                 texts.append(text.text.encode('ascii','ignore'))
             except Exception as e:
-                #print 'failed to parse paragraph: {0}'.format(e)
-                pass
+                handle_exception(e)
     except Exception as e:
-        #print 'failed to parse text: {0}'.format(e)
-        pass
+        handle_exception(e)
     return filter(None,texts)
 
 def parse_title(soup):
     title = ''
     try:
-        title = clean_text(soup.title.string.encode('ascii','ignore'))
+        t = soup.title
+        title = clean_text(str(t))
     except Exception as e:
-        #print 'failed to parse title: {0}'.format(e)
-        pass
+        handle_exception(e)
     return title
 
 def parse_links(soup):
     links = []
     for link in soup.find_all('a'):
         try:
-            links.append(str(link.get('href').encode('ascii','ignore')))
+            link_url = link.get('href')
+            if link_url:
+                links.append(str(link_url.encode('ascii','ignore')))
         except Exception as e:
-            #print 'failed to parse link: {0}'.format(e)
-            pass
+            handle_exception(e)
     return filter(None,links)
 
 def parse_images(soup):
     images = []
-    for image in soup.findAll("img"):
+    for image in soup.findAll('img'):
         try:
-            images.append("%(src)s"%image)
+            if hasattr(image, 'src') and image.src:
+                images.append("%(src)s"%image)
+            else:
+                images.append('')
         except Exception as e:
-            #print 'failed to parse image: {0}'.format(e)
-            pass
+            handle_exception(e)
     return filter(None,images)
 
 def extract_features(input_dir, file_name):
@@ -78,7 +89,13 @@ def extract_features(input_dir, file_name):
     n_paragraphs = len(texts)
     text = ' '.join(texts)
     n_chars = len(text)
-    n_words = len(re.split('\s+', text))
+    ctext = clean_text(text)
+    words = re.split('\s+', ctext)
+    n_words = len(words)
+    avg_word_length = 0.0
+    for w in words:
+        avg_word_length += len(w)
+    avg_word_length /= n_words
 
     values['n_lines'] = text.count('\n')
     values['n_spaces'] = text.count(' ')
@@ -97,15 +114,16 @@ def extract_features(input_dir, file_name):
         n_title_words,
         n_paragraphs,
         n_chars,
-        n_words
+        n_words,
+        avg_word_length
     ]
 
     for feature in values.keys():
         ret.append(values[feature])
-        feature_per_words = 0
+        feature_per_words = 0.0
         if n_words > 10:
             feature_per_words = 1.0 * values[feature] / n_words
-            ret.append(feature_per_words)
+        ret.append(feature_per_words)
 
     return ret
 
