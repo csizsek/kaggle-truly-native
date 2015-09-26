@@ -8,7 +8,7 @@ import (
 	_ "fmt"
 )
 
-func ParseHtml(rec string, title map[string]int, body map[string]int, meta map[string]int) {
+func ParseHtml(rec string, stopwords map[string]int, title map[string]int, body map[string]int, meta map[string]int) {
 	r := strings.NewReader(rec)
 	html_parser := html.NewTokenizer(r)
 
@@ -33,9 +33,9 @@ func ParseHtml(rec string, title map[string]int, body map[string]int, meta map[s
 		case html.TextToken:
 			if stack.Len() == 0 {
 				if in_title {
-					Tokenize(string(html_parser.Text()), title)
+					Tokenize(string(html_parser.Text()), stopwords, title)
 				} else {
-					Tokenize(string(html_parser.Text()), body)
+					Tokenize(string(html_parser.Text()), stopwords, body)
 				}
 			}
 		case html.StartTagToken:
@@ -66,18 +66,18 @@ func ParseHtml(rec string, title map[string]int, body map[string]int, meta map[s
 	}
 }
 
-func Tokenize(text string, words map[string]int) {
+func Tokenize(text string, stopwords map[string]int, words map[string]int) {
 	var s scanner.Scanner
 	s.Init(strings.NewReader(text))
 	tok := s.Scan()
 	for tok != scanner.EOF {
 		if tok == scanner.String {
-			Tokenize(strings.Trim(s.TokenText(), "\"`"), words)
+			Tokenize(strings.Trim(s.TokenText(), "\"`"), stopwords, words)
 		} else if tok == scanner.Char {
-			Tokenize(strings.Trim(s.TokenText(), "'"), words)
+			Tokenize(strings.Trim(s.TokenText(), "'"), stopwords, words)
 		} else if tok == scanner.Ident {
 			stem := porterstemmer.StemString(s.TokenText())
-			if len(stem) > 2 {
+			if _, ok := stopwords[stem]; !ok && len(stem) > 2 {
 				words[stem] += 1
 			}
 		}
