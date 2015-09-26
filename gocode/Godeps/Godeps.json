@@ -1,0 +1,10 @@
+{
+    "ImportPath": "github.com/csizsek/kaggle-truly-native",
+    "GoVersion": "go1.4",
+    "Deps": [
+        {
+            "ImportPath": "github.com/reiver/go-porterstemmer",
+            "Rev": "HEAD"
+        }
+    ]
+}
