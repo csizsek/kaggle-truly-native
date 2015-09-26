@@ -76,8 +76,9 @@ func Tokenize(text string, stopwords map[string]int, words map[string]int) {
 		} else if tok == scanner.Char {
 			Tokenize(strings.Trim(s.TokenText(), "'"), stopwords, words)
 		} else if tok == scanner.Ident {
-			stem := porterstemmer.StemString(s.TokenText())
-			if _, ok := stopwords[stem]; !ok && len(stem) > 2 {
+			word := s.TokenText()
+			if _, ok := stopwords[word]; !ok && len(word) > 2 {
+				stem := porterstemmer.StemString(word)
 				words[stem] += 1
 			}
 		}
