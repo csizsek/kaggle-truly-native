@@ -11,6 +11,7 @@ import (
 func main() {
 
   fileb, err := ioutil.ReadFile(os.Args[1])
+  stopwords
   file := string(fileb)
   if err != nil {
     fmt.Println("Error:", err)
