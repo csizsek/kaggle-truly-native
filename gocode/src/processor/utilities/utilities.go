@@ -2,10 +2,12 @@ package utilities
 
 import (
 	"strings"
-	"github.com/reiver/go-porterstemmer"
+	_ "github.com/reiver/go-porterstemmer"
+	"github.com/kljensen/snowball"
 	"golang.org/x/net/html"
 	"text/scanner"
 	_ "fmt"
+	"fmt"
 )
 
 func ParseHtml(rec string, stopwords map[string]int, title map[string]int, body map[string]int, meta map[string]int) {
@@ -78,7 +80,11 @@ func Tokenize(text string, stopwords map[string]int, words map[string]int) {
 		} else if tok == scanner.Ident {
 			word := s.TokenText()
 			if _, ok := stopwords[word]; !ok && len(word) > 2 {
-				stem := porterstemmer.StemString(word)
+				stem, err := snowball.Stem(word, "english", true)
+				if err != nil {
+					fmt.Errorf("Couldnt stem word: %s", word)
+					stem = word
+				}
 				words[stem] += 1
 			}
 		}

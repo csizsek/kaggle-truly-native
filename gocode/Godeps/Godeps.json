@@ -9,6 +9,10 @@
         {
             "ImportPath": "golang.org/x/net/html",
             "Rev": "HEAD"
+        },
+        {
+            "ImportPath": "github.com/kljensen/snowball",
+            "Rev": "HEAD"
         }
     ]
 }
