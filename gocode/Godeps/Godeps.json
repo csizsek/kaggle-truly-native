@@ -5,6 +5,10 @@
         {
             "ImportPath": "github.com/reiver/go-porterstemmer",
             "Rev": "HEAD"
+        },
+        {
+            "ImportPath": "golang.org/x/net/html",
+            "Rev": "HEAD"
         }
     ]
 }
