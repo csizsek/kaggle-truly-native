@@ -47,8 +47,12 @@ func main() {
     meta := make(map[string]int)
 
     utilities.ParseHtml(file, stopwords, title, body, meta)
-
-    fmt.Printf("%s |", path)
+    last := strings.LastIndex(path, "/")
+    var fname string
+    if (last > -1) {
+      fname = path[last+1:]
+    }
+    fmt.Printf("%s |", fname)
     for key, val := range title {
       fmt.Printf(" %s:%d ", key, val)
     }
