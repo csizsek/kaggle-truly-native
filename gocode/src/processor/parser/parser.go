@@ -8,11 +8,17 @@ import (
   "processor/utilities"
   "strings"
   "path/filepath"
+  "strconv"
 )
 
 
 func main() {
   stopwords := make(map[string]int)
+  skipDocs := 0
+  if len(os.Args) > 3 {
+    skipDocs, _ = strconv.Atoi(os.Args[3])
+  }
+
   fileSW, err := os.Open(os.Args[2])
   if err != nil {
     fmt.Errorf("Couldn't open stopwords file: %s", err.Error())
@@ -28,8 +34,14 @@ func main() {
     fmt.Errorf("Error reading stopwords file: %s", err.Error())
   }
 
+  numFile := 0
   filepath.Walk(os.Args[1], func(path string, f os.FileInfo, err error) error {
     if f.IsDir() {
+      return nil
+    }
+
+    if numFile < skipDocs {
+      numFile++
       return nil
     }
     fileb, err := ioutil.ReadFile(path)
