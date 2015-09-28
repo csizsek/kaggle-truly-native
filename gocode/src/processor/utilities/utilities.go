@@ -137,6 +137,11 @@ func ParseCleanFiles(files []string, processor CleanProcessor) {
 			processor.BeginLine()
 			cols := strings.Split(line, "|")
 
+			if len(cols) != 3 {
+				fmt.Errorf("Wrong line format: %s", line)
+				liner, isPrefix, err = reader.ReadLine()
+				continue
+			}
 			processor.Process(cols[0], 0, Id)
 			for i := 1; i <= 2; i++ {
 				words := strings.Split(cols[i], " ")
