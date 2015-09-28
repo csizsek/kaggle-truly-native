@@ -87,7 +87,9 @@ func Tokenize(text string, stopwords map[string]int, words map[string]int) {
 					fmt.Errorf("Couldnt stem word: %s", word)
 					stem = word
 				}
-				words[stem] += 1
+				if _, ok := stopwords[stem]; !ok {
+					words[stem] += 1
+				}
 			}
 		}
 		tok = s.Scan()
