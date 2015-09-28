@@ -116,12 +116,17 @@ func ParseCleanFile(file string, processor CleanProcessor) {
 		return
 	}
 	defer fileSW.Close()
+	reader := bufio.NewReaderSize(fileSW, 4*1024)
 
-	scanner := bufio.NewScanner(fileSW)
 	processor.Begin()
-	for scanner.Scan() {
+	liner, succ, err := reader.ReadLine()
+	for err == nil {
+		if succ {
+			fmt.Errorf("Line is too long: %s", string(liner))
+		}
 		processor.BeginLine()
-		line := scanner.Text()
+		line := string(liner)
+		fmt.Printf("")
 
 
 		cols := strings.Split(line, "|")
@@ -144,11 +149,7 @@ func ParseCleanFile(file string, processor CleanProcessor) {
 			}
 		}
 		processor.EndLine()
-	}
-
-	if err := scanner.Err(); err != nil {
-		fmt.Errorf("Error reading file: %s", err.Error())
-		return
+		liner, succ, err = reader.ReadLine()
 	}
 	processor.End()
 }
