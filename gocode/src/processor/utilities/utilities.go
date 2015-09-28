@@ -6,8 +6,10 @@ import (
 	"github.com/kljensen/snowball"
 	"golang.org/x/net/html"
 	"text/scanner"
-	_ "fmt"
 	"fmt"
+	"os"
+	"bufio"
+	"strconv"
 )
 
 func ParseHtml(rec string, stopwords map[string]int, title map[string]int, body map[string]int, meta map[string]int) {
@@ -90,4 +92,63 @@ func Tokenize(text string, stopwords map[string]int, words map[string]int) {
 		}
 		tok = s.Scan()
 	}
+}
+
+const (
+	Id = 0
+	Title = 1
+	Body = 2
+)
+
+type CleanProcessor interface {
+	Begin()
+	BeginLine()
+	Process(word string, num uint32, col int)
+	EndLine()
+	End()
+}
+
+
+func ParseCleanFile(file string, processor CleanProcessor) {
+	fileSW, err := os.Open(file)
+	if err != nil {
+		fmt.Errorf("Couldn't open file: %s", err.Error())
+		return
+	}
+	defer fileSW.Close()
+
+	scanner := bufio.NewScanner(fileSW)
+	processor.Begin()
+	for scanner.Scan() {
+		processor.BeginLine()
+		line := scanner.Text()
+
+
+		cols := strings.Split(line, "|")
+
+		processor.Process(cols[0], 0, Id)
+		for i := 1; i <= 2; i++ {
+			words := strings.Split(cols[i], " ")
+			for _, val := range words {
+				var num uint32
+				var word string
+
+				vect := strings.Split(val, ":")
+				if len(vect) != 2 {
+					continue
+				}
+				word = vect[0]
+				tmp, _ := strconv.Atoi(vect[1])
+				num = uint32(tmp)
+				processor.Process(word, num, i)
+			}
+		}
+		processor.EndLine()
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Errorf("Error reading file: %s", err.Error())
+		return
+	}
+	processor.End()
 }

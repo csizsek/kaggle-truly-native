@@ -1,0 +1,2 @@
+valami | alma:1 | korte:1 alma:2
+valaki | | szilva:2 korte:2

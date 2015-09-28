@@ -1,10 +1,8 @@
-package main
+package cleanparser
 
 import (
-	"os"
 	"fmt"
-	"bufio"
-	"strings"
+	"processor/utilities"
 )
 
 type TfDf struct {
@@ -12,45 +10,42 @@ type TfDf struct {
 	Df uint32
 }
 
+type DictProcessor struct {
+	lineDict map[string]uint32
+	dict map[string]TfDf
+}
 
-func main() {
-	dict := make(map[string]TfDf)
+func (dp *DictProcessor) Begin () {
+	dp.dict = make(map[string]TfDf)
+}
 
-	fileSW, err := os.Open(os.Args[1])
-	if err != nil {
-		fmt.Errorf("Couldn't open stopwords file: %s", err.Error())
+func (dp *DictProcessor) BeginLine () {
+	dp.lineDict = make(map[string]uint32, 0)
+}
+
+func (dp *DictProcessor) Process (word string, num uint32, col int) {
+	switch (col) {
+	case utilities.Id:
+		return
+	default:
+		dp.lineDict[word] = dp.lineDict[word] + num
 	}
-	defer fileSW.Close()
+}
 
-	scanner := bufio.NewScanner(fileSW)
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		cols := strings.Split(line, "|")
-
-		for i := 1; i <= 2; i++ {
-			words := strings.Split(cols[i], " ")
-			for _, val := range words {
-				var num uint32
-				var word string
-				fmt.Sscanf(val, "%s:%u", word, num)
-
-				if tfdf, ok := dict[word]; ok {
-					tfdf.Tf += num;
-					tfdf.Df++
-					dict[word] = tfdf
-				} else {
-					dict[word] = TfDf{Tf:num, Df:1}
-				}
-			}
+func (dp *DictProcessor) EndLine () {
+	for word, num := range dp.lineDict {
+		if tfdf, ok := dp.dict[word]; ok {
+			tfdf.Tf += num
+			tfdf.Df += 1
+			dp.dict[word] = tfdf
+		} else {
+			dp.dict[word] = TfDf{Tf:num, Df:1}
 		}
 	}
+}
 
-	if err := scanner.Err(); err != nil {
-		fmt.Errorf("Error reading stopwords file: %s", err.Error())
-	}
-
-	for word, tfdf := range dict {
-		fmt.Printf("%s %u %u", word, tfdf.Tf, tfdf.Df)
+func (dp *DictProcessor) End() {
+	for word, tfdf := range dp.dict {
+		fmt.Printf("%s %d %d\n", word, tfdf.Tf, tfdf.Df)
 	}
 }
