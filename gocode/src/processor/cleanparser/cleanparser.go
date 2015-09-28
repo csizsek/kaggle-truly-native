@@ -1,4 +1,4 @@
-package cleanparser
+package main
 
 import (
 	"os"
