@@ -109,51 +109,54 @@ type CleanProcessor interface {
 }
 
 
-func ParseCleanFile(file string, processor CleanProcessor) {
-	fileSW, err := os.Open(file)
-	if err != nil {
-		fmt.Errorf("Couldn't open file: %s", err.Error())
-		return
-	}
-	defer fileSW.Close()
-	reader := bufio.NewReaderSize(fileSW, 4*1024)
+func ParseCleanFiles(files []string, processor CleanProcessor) {
 
 	processor.Begin()
-	liner, isPrefix, err := reader.ReadLine()
-	for err == nil {
-		var line string
-		if isPrefix {
-			for isPrefix {
-				line = line + string(liner)
-				liner, isPrefix, err = reader.ReadLine()
-			}
-		} else {
-			line = string(liner)
+	for _, file := range files {
+		fileSW, err := os.Open(file)
+		if err != nil {
+			fmt.Errorf("Couldn't open file: %s", err.Error())
+			return
 		}
-		processor.BeginLine()
+		defer fileSW.Close()
+		reader := bufio.NewReaderSize(fileSW, 4*1024)
 
 
-		cols := strings.Split(line, "|")
-
-		processor.Process(cols[0], 0, Id)
-		for i := 1; i <= 2; i++ {
-			words := strings.Split(cols[i], " ")
-			for _, val := range words {
-				var num uint32
-				var word string
-
-				vect := strings.Split(val, ":")
-				if len(vect) != 2 {
-					continue
+		liner, isPrefix, err := reader.ReadLine()
+		for err == nil {
+			var line string
+			if isPrefix {
+				for isPrefix {
+					line = line + string(liner)
+					liner, isPrefix, err = reader.ReadLine()
 				}
-				word = vect[0]
-				tmp, _ := strconv.Atoi(vect[1])
-				num = uint32(tmp)
-				processor.Process(word, num, i)
+			} else {
+				line = string(liner)
 			}
+
+			processor.BeginLine()
+			cols := strings.Split(line, "|")
+
+			processor.Process(cols[0], 0, Id)
+			for i := 1; i <= 2; i++ {
+				words := strings.Split(cols[i], " ")
+				for _, val := range words {
+					var num uint32
+					var word string
+
+					vect := strings.Split(val, ":")
+					if len(vect) != 2 {
+						continue
+					}
+					word = vect[0]
+					tmp, _ := strconv.Atoi(vect[1])
+					num = uint32(tmp)
+					processor.Process(word, num, i)
+				}
+			}
+			processor.EndLine()
+			liner, isPrefix, err = reader.ReadLine()
 		}
-		processor.EndLine()
-		liner, isPrefix, err = reader.ReadLine()
 	}
 	processor.End()
 }

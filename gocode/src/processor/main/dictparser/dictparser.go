@@ -9,6 +9,6 @@ import (
 
 func main() {
 
-	utilities.ParseCleanFile(os.Args[1], &cleanparser.DictProcessor{})
+	utilities.ParseCleanFiles(os.Args[1:], &cleanparser.DictProcessor{})
 
 }
