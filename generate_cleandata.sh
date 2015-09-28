@@ -15,6 +15,6 @@ output_dir=$2
 for i in 0 1 2 3 4 5
 do
     unzip "$input_dir/$i.zip" -d "$input_dir"
-    parser "$input_dir/$i/" stopwords.txt 1> "$output_dir"/clean"$i".txt 2>> err
+    htmlparser "$input_dir/$i/" stopwords.txt 1> "$output_dir"/clean"$i".txt 2>> err
     rm -rf "$input_dir/$i/"
 done

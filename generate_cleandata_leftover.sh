@@ -16,6 +16,6 @@ for i in 0 1 2 3 4 5
 do
     N=$(wc -l "$output_dir"/clean"$i".txt | awk '{print $1}')
     unzip "$input_dir/$i.zip" -d "$input_dir"
-    parser "$input_dir/$i/" stopwords.txt $N 1> "$output_dir"/clean"$i"_leftover.txt 2>> err
+    htmlparser "$input_dir/$i/" stopwords.txt $N 1> "$output_dir"/clean"$i"_leftover.txt 2>> err
     rm -rf "$input_dir/$i/"
 done
