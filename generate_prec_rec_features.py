@@ -44,6 +44,8 @@ with open(dict_file_name) as dict_file:
         for n in top_set_sizes:
             if i <= n:
                 top_sets[n].add(word)
+        if n > top_set_sizes[-1]:
+            break
 
 re_wss = re.compile('\s+')
 with open(docs_file_name) as docs_file:
