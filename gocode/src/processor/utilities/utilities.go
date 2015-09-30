@@ -10,6 +10,7 @@ import (
 	"os"
 	"bufio"
 	"strconv"
+	"processor/cleanparser"
 )
 
 func ParseHtml(rec string, stopwords map[string]int, title map[string]int, body map[string]int, meta map[string]int) {
@@ -96,22 +97,7 @@ func Tokenize(text string, stopwords map[string]int, words map[string]int) {
 	}
 }
 
-const (
-	Id = 0
-	Title = 1
-	Body = 2
-)
-
-type CleanProcessor interface {
-	Begin()
-	BeginLine()
-	Process(word string, num uint32, col int)
-	EndLine()
-	End()
-}
-
-
-func ParseCleanFiles(files []string, processor CleanProcessor) {
+func ParseCleanFiles(files []string, processor cleanparser.CleanProcessor) {
 
 	processor.Begin()
 	for _, file := range files {
@@ -144,7 +130,7 @@ func ParseCleanFiles(files []string, processor CleanProcessor) {
 				liner, isPrefix, err = reader.ReadLine()
 				continue
 			}
-			processor.Process(cols[0], 0, Id)
+			processor.Process(cols[0], 0, 0)
 			for i := 1; i <= 2; i++ {
 				words := strings.Split(cols[i], " ")
 				for _, val := range words {
