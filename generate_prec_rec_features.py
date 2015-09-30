@@ -49,28 +49,31 @@ re_wss = re.compile('\s+')
 with open(docs_file_name) as docs_file:
     with open(output_file_name, 'w') as output_file:
         for line in docs_file.readlines():
-            line = line.strip()
-            doc_name = line.split('|')[0].strip()
-            word_counts = line.split('|')[2].strip()
-            n_words = 0
-            prec = defaultdict(int)
-            rec = defaultdict(set)
-            for word_count in re_wss.split(word_counts):
-                if not word_count:
-                    continue
-                word = word_count.split(':')[0]
-                count = int(word_count.split(':')[1])
-                n_words += int(count)
+            try:
+                line = line.strip()
+                doc_name = line.split('|')[0].strip()
+                word_counts = line.split('|')[2].strip()
+                n_words = 0
+                prec = defaultdict(int)
+                rec = defaultdict(set)
+                for word_count in re_wss.split(word_counts):
+                    if not word_count:
+                        continue
+                    word = word_count.split(':')[0]
+                    count = int(word_count.split(':')[1])
+                    n_words += int(count)
+                    for n in top_set_sizes:
+                        if word in top_sets[n]:
+                            prec[n] += count
+                            rec[n].add(word)
+                ret = [doc_name]
                 for n in top_set_sizes:
-                    if word in top_sets[n]:
-                        prec[n] += count
-                        rec[n].add(word)
-            ret = [doc_name]
-            for n in top_set_sizes:
-                if n_words > 0:
-                    ret.append(1.0 * prec[n] / n_words)
-                else:
-                    ret.append(0)
-                ret.append(1.0 * len(rec[n]) / n)
-            output_file.write(','.join(str(x) for x in ret))
-            output_file.write('\n')
+                    if n_words > 0:
+                        ret.append(1.0 * prec[n] / n_words)
+                    else:
+                        ret.append(0)
+                    ret.append(1.0 * len(rec[n]) / n)
+                output_file.write(','.join(str(x) for x in ret))
+                output_file.write('\n')
+            except:
+                pass
