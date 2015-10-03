@@ -2,17 +2,14 @@ import datetime
 import os
 import re
 import sys
+import urlparse
 from bs4 import BeautifulSoup as bs
 
-exception_action = 'PRINT'
 
 def handle_exception(e):
-    if exception_action == 'NOTHING':
-        return
-    elif exception_action == 'PRINT':
-        print(e)
-    elif exception_action == 'RAISE':
-        raise e
+    #return
+    print(e)
+    #raise e
 
 def clean_text(s):
     try:
@@ -55,36 +52,90 @@ def parse_links(soup):
                 links.append(str(link_url.encode('ascii','ignore')))
         except Exception as e:
             handle_exception(e)
-    return filter(None,links)
+    return links
 
 def parse_images(soup):
     images = []
     for image in soup.findAll('img'):
         try:
-            if hasattr(image, 'src') and image.src:
-                images.append("%(src)s"%image)
-            else:
-                images.append('')
+            images.append(image['src'])
         except Exception as e:
-            handle_exception(e)
-    return filter(None,images)
+            pass
+    return images
 
-def extract_features(input_dir, file_name):
+def get_soup(input_dir, file_name):
     with open(input_dir + os.sep + file_name, 'r') as file:
         soup = bs(file, 'html.parser')
+        return soup
 
-    values = {}
+def extract_features(input_dir, file_name):
+    soup = get_soup(input_dir, file_name)
 
+    # title related features
     title = parse_title(soup)
     n_title_chars = len(title)
     n_title_words = len(title.split(' '))
 
+    # link related features
     links = parse_links(soup)
-    values['n_links'] = len(links)
+    n_links = len(links)
+    n_links_rel = 0
+    n_links_abs = 0
+    n_links_domain_com = 0
+    n_links_domain_org = 0
+    n_links_scheme_none = 0
+    n_links_scheme_http = 0
+    n_links_scheme_https = 0
+    n_links_path_nonempty = 0
+    for l in links:
+        pl = urlparse.urlparse(l)
 
+        if pl.netloc == '':
+            n_links_rel += 1
+        else:
+            n_links_abs += 1
+
+        domain = pl.netloc.split('.')[-1]
+        if domain == 'com':
+            n_links_domain_com += 1
+        elif domain == 'org':
+            n_links_domain_org += 1
+
+        if pl.scheme == '':
+            n_links_scheme_none += 1
+        elif pl.scheme == 'http':
+            n_links_scheme_http += 1
+        elif pl.scheme == 'https':
+            n_links_scheme_https += 1
+
+        if pl.path != '':
+            n_links_path_nonempty += 1
+
+    # image related features
     images = parse_images(soup)
-    values['n_images'] = len(links)
+    n_imgs = len(images)
+    n_imgs_rel = 0
+    n_imgs_abs = 0
+    n_imgs_fmt_jpg = 0
+    n_imgs_fmt_gif = 0
+    n_imgs_fmt_png = 0
+    for i in images:
+        pl = urlparse.urlparse(i)
 
+        if pl.netloc == '':
+            n_imgs_rel += 1
+        else:
+            n_imgs_abs += 1
+
+        fmt = pl.path.split('.')[-1]
+        if fmt == 'jpg':
+            n_imgs_fmt_jpg += 1
+        elif fmt == 'gif':
+            n_imgs_fmt_gif += 1
+        elif fmt == 'png':
+            n_imgs_fmt_png += 1
+
+    # body related features
     texts = parse_text(soup)
     n_paragraphs = len(texts)
     text = ' '.join(texts)
@@ -97,33 +148,67 @@ def extract_features(input_dir, file_name):
         avg_word_length += len(w)
     avg_word_length /= n_words
 
-    values['n_lines'] = text.count('\n')
-    values['n_spaces'] = text.count(' ')
-    values['n_tabs'] = text.count('\t')
-    values['n_braces'] = text.count('{')
-    values['n_brackets'] = text.count('[')
-    values['n_dashes'] = text.count('-')
-    values['n_dots'] = text.count('.')
-    values['n_bangs'] = text.count('!')
-    values['n_eqs'] = text.count('=')
-    values['n_pluses'] = text.count('+')
+    # spec character related features
+    n_lines = text.count('\n')
+    n_spaces = text.count(' ')
+    n_tabs = text.count('\t')
+    n_braces = text.count('{')
+    n_brackets = text.count('[')
+    n_dashes = text.count('-')
+    n_dots = text.count('.')
+    n_bangs = text.count('!')
+    n_eqs = text.count('=')
+    n_pluses = text.count('+')
+    n_x_pars = text.count('(x)')
+    n_x_pars += text.count('(X)')
+    n_x_pars += text.count('[x]')
+    n_x_pars += text.count('[X]')
 
     ret =  [
         file_name,
+
+        # title related features
         n_title_chars,
         n_title_words,
+
+        # link related features
+        n_links,
+        n_links_rel,
+        n_links_abs,
+        n_links_domain_com,
+        n_links_domain_org,
+        n_links_scheme_none,
+        n_links_scheme_http,
+        n_links_scheme_https,
+        n_links_path_nonempty,
+
+        # image related features
+        n_imgs,
+        n_imgs_rel,
+        n_imgs_abs,
+        n_imgs_fmt_jpg,
+        n_imgs_fmt_gif,
+        n_imgs_fmt_png,
+
+        # body related features
         n_paragraphs,
         n_chars,
         n_words,
-        avg_word_length
-    ]
+        avg_word_length,
 
-    for feature in values.keys():
-        ret.append(values[feature])
-        feature_per_words = 0.0
-        if n_words > 10:
-            feature_per_words = 1.0 * values[feature] / n_words
-        ret.append(feature_per_words)
+        # spec character related features
+        n_lines,
+        n_spaces,
+        n_tabs,
+        n_braces,
+        n_brackets,
+        n_dashes,
+        n_dots,
+        n_bangs,
+        n_eqs,
+        n_pluses,
+        n_x_pars
+    ]
 
     return ret
 
