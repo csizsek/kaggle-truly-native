@@ -88,28 +88,31 @@ def extract_features(input_dir, file_name):
     n_links_scheme_https = 0
     n_links_path_nonempty = 0
     for l in links:
-        pl = urlparse.urlparse(l)
+        try:
+            pl = urlparse.urlparse(l)
 
-        if pl.netloc == '':
-            n_links_rel += 1
-        else:
-            n_links_abs += 1
+            if pl.netloc == '':
+                n_links_rel += 1
+            else:
+                n_links_abs += 1
 
-        domain = pl.netloc.split('.')[-1]
-        if domain == 'com':
-            n_links_domain_com += 1
-        elif domain == 'org':
-            n_links_domain_org += 1
+            domain = pl.netloc.split('.')[-1]
+            if domain == 'com':
+                n_links_domain_com += 1
+            elif domain == 'org':
+                n_links_domain_org += 1
 
-        if pl.scheme == '':
-            n_links_scheme_none += 1
-        elif pl.scheme == 'http':
-            n_links_scheme_http += 1
-        elif pl.scheme == 'https':
-            n_links_scheme_https += 1
+            if pl.scheme == '':
+                n_links_scheme_none += 1
+            elif pl.scheme == 'http':
+                n_links_scheme_http += 1
+            elif pl.scheme == 'https':
+                n_links_scheme_https += 1
 
-        if pl.path != '':
-            n_links_path_nonempty += 1
+            if pl.path != '':
+                n_links_path_nonempty += 1
+        except Exception as e:
+            handle_exception(e)
 
     # image related features
     images = parse_images(soup)
@@ -120,20 +123,23 @@ def extract_features(input_dir, file_name):
     n_imgs_fmt_gif = 0
     n_imgs_fmt_png = 0
     for i in images:
-        pl = urlparse.urlparse(i)
+        try:
+            pl = urlparse.urlparse(i)
 
-        if pl.netloc == '':
-            n_imgs_rel += 1
-        else:
-            n_imgs_abs += 1
+            if pl.netloc == '':
+                n_imgs_rel += 1
+            else:
+                n_imgs_abs += 1
 
-        fmt = pl.path.split('.')[-1]
-        if fmt == 'jpg':
-            n_imgs_fmt_jpg += 1
-        elif fmt == 'gif':
-            n_imgs_fmt_gif += 1
-        elif fmt == 'png':
-            n_imgs_fmt_png += 1
+            fmt = pl.path.split('.')[-1]
+            if fmt == 'jpg':
+                n_imgs_fmt_jpg += 1
+            elif fmt == 'gif':
+                n_imgs_fmt_gif += 1
+            elif fmt == 'png':
+                n_imgs_fmt_png += 1
+        except Exception as e:
+            handle_exception(e)
 
     # body related features
     texts = parse_text(soup)
@@ -167,11 +173,9 @@ def extract_features(input_dir, file_name):
     ret =  [
         file_name,
 
-        # title related features
         n_title_chars,
         n_title_words,
 
-        # link related features
         n_links,
         n_links_rel,
         n_links_abs,
@@ -182,7 +186,6 @@ def extract_features(input_dir, file_name):
         n_links_scheme_https,
         n_links_path_nonempty,
 
-        # image related features
         n_imgs,
         n_imgs_rel,
         n_imgs_abs,
@@ -190,13 +193,11 @@ def extract_features(input_dir, file_name):
         n_imgs_fmt_gif,
         n_imgs_fmt_png,
 
-        # body related features
         n_paragraphs,
         n_chars,
         n_words,
         avg_word_length,
 
-        # spec character related features
         n_lines,
         n_spaces,
         n_tabs,
