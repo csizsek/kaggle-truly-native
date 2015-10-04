@@ -54,7 +54,7 @@ with open(docs_file_name) as docs_file:
             try:
                 line = line.strip()
                 doc_name = line.split('|')[0].strip()
-                word_counts = line.split('|')[2].strip()
+                word_counts = line.split('|')[3].strip()
                 n_words = 0
                 prec = defaultdict(int)
                 rec = defaultdict(set)
@@ -77,5 +77,5 @@ with open(docs_file_name) as docs_file:
                     ret.append(1.0 * len(rec[n]) / n)
                 output_file.write(','.join(str(x) for x in ret))
                 output_file.write('\n')
-            except:
-                pass
+            except Exception as e:
+                print e

@@ -19,9 +19,9 @@ from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 
 print('--- Read training labels')
-train_labels = pd.read_csv('data/train_v2.csv')
+train_labels = pd.read_csv('input/train_v2.csv')
 train_keys = dict([a[1] for a in train_labels.iterrows()])
-test_files = set(pd.read_csv('data/sampleSubmission_v2.csv').file.values)
+test_files = set(pd.read_csv('input/sampleSubmission_v2.csv').file.values)
 
 def create_data(filepath):
     values = {}
@@ -40,7 +40,7 @@ def create_data(filepath):
     values['length'] = len(text)
     return values
 
-filepaths = glob.glob('data/*/*.txt')
+filepaths = glob.glob('input/*/*.txt')
 num_tasks = len(filepaths)
 
 p = multiprocessing.Pool()
@@ -65,4 +65,4 @@ clf.fit(train.drop(['file', 'sponsored'], 1), train.sponsored)
 print('--- Create predictions and submission')
 submission = test[['file']].reset_index(drop=True)
 submission['sponsored'] = clf.predict_proba(test.drop(['file', 'sponsored'], 1))[:, 1]
-submission.to_csv('native_btb_basic_submission.csv', index=False)
+submission.to_csv('output/native_btb_basic_submission.csv', index=False)
