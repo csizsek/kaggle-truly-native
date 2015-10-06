@@ -68,8 +68,14 @@ def get_soup(input_dir, file_name):
         soup = bs(file, 'html.parser')
         return soup
 
+def get_raw(input_dir, file_name):
+    with open(input_dir + os.sep + file_name, 'r') as file:
+        raw = file.read()
+        return raw
+
 def extract_features(input_dir, file_name):
     soup = get_soup(input_dir, file_name)
+    raw = get_raw(input_dir, file_name)
 
     # title related features
     title = parse_title(soup)
@@ -87,6 +93,8 @@ def extract_features(input_dir, file_name):
     n_links_scheme_http = 0
     n_links_scheme_https = 0
     n_links_path_nonempty = 0
+    n_links_ad = 0
+    n_links_utm = 0
     for l in links:
         try:
             pl = urlparse.urlparse(l)
@@ -111,6 +119,11 @@ def extract_features(input_dir, file_name):
 
             if pl.path != '':
                 n_links_path_nonempty += 1
+
+            n_links_ad += re.split('\W', l).count('ad')
+
+            if 'utm_' in l:
+                n_links_utm += 1
         except Exception as e:
             handle_exception(e)
 
@@ -122,6 +135,8 @@ def extract_features(input_dir, file_name):
     n_imgs_fmt_jpg = 0
     n_imgs_fmt_gif = 0
     n_imgs_fmt_png = 0
+    n_imgs_ad = 0
+    n_imgs_utm = 0
     for i in images:
         try:
             pl = urlparse.urlparse(i)
@@ -138,6 +153,11 @@ def extract_features(input_dir, file_name):
                 n_imgs_fmt_gif += 1
             elif fmt == 'png':
                 n_imgs_fmt_png += 1
+
+            n_imgs_ad += re.split('\W', i).count('ad')
+
+            if 'utm_' in i:
+                n_imgs_utm += 1
         except Exception as e:
             handle_exception(e)
 
@@ -155,20 +175,20 @@ def extract_features(input_dir, file_name):
     avg_word_length /= n_words
 
     # spec character related features
-    n_lines = text.count('\n')
-    n_spaces = text.count(' ')
-    n_tabs = text.count('\t')
-    n_braces = text.count('{')
-    n_brackets = text.count('[')
-    n_dashes = text.count('-')
-    n_dots = text.count('.')
-    n_bangs = text.count('!')
-    n_eqs = text.count('=')
-    n_pluses = text.count('+')
-    n_x_pars = text.count('(x)')
-    n_x_pars += text.count('(X)')
-    n_x_pars += text.count('[x]')
-    n_x_pars += text.count('[X]')
+    n_lines = raw.count('\n')
+    n_spaces = raw.count(' ')
+    n_tabs = raw.count('\t')
+    n_braces = raw.count('{')
+    n_brackets = raw.count('[')
+    n_dashes = raw.count('-')
+    n_dots = raw.count('.')
+    n_bangs = raw.count('!')
+    n_eqs = raw.count('=')
+    n_pluses = raw.count('+')
+    n_x_pars = raw.count('(x)')
+    n_x_pars += raw.count('(X)')
+    n_x_pars += raw.count('[x]')
+    n_x_pars += raw.count('[X]')
 
     ret =  [
         file_name,
@@ -185,6 +205,8 @@ def extract_features(input_dir, file_name):
         n_links_scheme_http,
         n_links_scheme_https,
         n_links_path_nonempty,
+        n_links_ad,
+        n_links_utm,
 
         n_imgs,
         n_imgs_rel,
@@ -192,6 +214,8 @@ def extract_features(input_dir, file_name):
         n_imgs_fmt_jpg,
         n_imgs_fmt_gif,
         n_imgs_fmt_png,
+        n_imgs_ad,
+        n_imgs_utm,
 
         n_paragraphs,
         n_chars,
